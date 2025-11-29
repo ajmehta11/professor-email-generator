@@ -20,51 +20,24 @@ def get_gmail_service():
     """Authenticate and return Gmail API service."""
     creds = None
 
-    # Check if token exists in session state (for deployed apps)
-    if 'gmail_token' in st.session_state:
-        creds = Credentials.from_authorized_user_info(
-            st.session_state['gmail_token'], SCOPES)
+    # The file token.json stores the user's access and refresh tokens
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
 
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            # Try to get credentials from Streamlit secrets first
-            if 'google_oauth' in st.secrets:
-                client_config = {
-                    "installed": {
-                        "client_id": st.secrets["google_oauth"]["client_id"],
-                        "client_secret": st.secrets["google_oauth"]["client_secret"],
-                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                        "token_uri": "https://oauth2.googleapis.com/token",
-                        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                        "redirect_uris": ["http://localhost"]
-                    }
-                }
-            elif os.path.exists('credentials.json'):
-                # Fall back to local file for development
-                import json
-                with open('credentials.json', 'r') as f:
-                    client_config = json.load(f)
-            else:
-                raise Exception("No OAuth credentials found. Please configure Streamlit secrets or credentials.json")
-
-            flow = InstalledAppFlow.from_client_config(
-                client_config, SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
             creds = flow.run_local_server(port=8080,
                                          prompt='consent',
                                          access_type='offline')
 
-        # Save the credentials in session state
-        st.session_state['gmail_token'] = {
-            'token': creds.token,
-            'refresh_token': creds.refresh_token,
-            'token_uri': creds.token_uri,
-            'client_id': creds.client_id,
-            'client_secret': creds.client_secret,
-            'scopes': creds.scopes
-        }
+        # Save the credentials for the next run
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
 
     service = build('gmail', 'v1', credentials=creds)
     return service
