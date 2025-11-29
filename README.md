@@ -45,12 +45,49 @@ pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client l
 
 ## 📖 Usage
 
-### Run the Streamlit App
+### Run the Streamlit App Locally
 
 ```bash
 source venv/bin/activate
 streamlit run app.py
 ```
+
+### Deploy to Streamlit Cloud
+
+1. **Push to GitHub** (already done)
+
+2. **Deploy on Streamlit Cloud**
+   - Go to [share.streamlit.io](https://share.streamlit.io)
+   - Click "New app"
+   - Select your repository: `ajmehta11/professor-email-generator`
+   - Main file path: `app.py`
+   - Click "Deploy"
+
+3. **Configure Secrets**
+   - In your deployed app, go to Settings → Secrets
+   - Add your OAuth credentials:
+
+   ```toml
+   [google_oauth]
+   client_id = "YOUR_CLIENT_ID"
+   client_secret = "YOUR_CLIENT_SECRET"
+   ```
+
+   - Get these values from your `credentials.json` file:
+     - `client_id` = the value under `installed.client_id`
+     - `client_secret` = the value under `installed.client_secret`
+
+4. **Update OAuth Redirect URIs**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   - Edit your OAuth 2.0 Client ID
+   - Add authorized redirect URIs:
+     - `http://localhost:8501`
+     - `https://YOUR-APP-NAME.streamlit.app` (if needed)
+
+5. **Make App Public** (Optional)
+   - Go to [OAuth Consent Screen](https://console.cloud.google.com/apis/credentials/consent)
+   - Click "PUBLISH APP" to allow anyone to use it
+   - Or add specific test users
 
 ### Using the App
 
